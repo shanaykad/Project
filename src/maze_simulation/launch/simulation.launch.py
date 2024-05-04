@@ -23,6 +23,7 @@ from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -71,7 +72,13 @@ def generate_launch_description():
         }.items()
     )
 
-    ld = LaunchDescription()
+    ld = LaunchDescription([Node(
+            package='maze_simulation',
+            executable='mazesolver',
+            parameters=[
+                {}
+            ]            
+        )])
 
     # Add the commands to the launch description
     ld.add_action(gzserver_cmd)
