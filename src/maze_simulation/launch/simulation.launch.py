@@ -72,13 +72,15 @@ def generate_launch_description():
         }.items()
     )
 
-    ld = LaunchDescription([Node(
-            package='maze_simulation',
-            executable='mazesolver',
-            parameters=[
-                {}
-            ]            
-        )])
+    ld = LaunchDescription(
+        # [Node(
+        #     package='maze_simulation',
+        #     executable='mazesolver',
+        #     parameters=[
+        #         {}
+        #     ]            
+        # )]
+        )
 
     # Add the commands to the launch description
     ld.add_action(gzserver_cmd)
