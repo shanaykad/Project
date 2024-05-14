@@ -15,7 +15,9 @@ class MazeSolver(Node):
         self.leftWall = False
         self.frontWall = False
         self.rightWall = False
+        self.finished = False # True when maze has been exited
         self.create_timer(1.0, self.solver) # Maze logic called every second
+        
 
     def scan_callback(self, msg):
         self.distances = msg.ranges
@@ -25,37 +27,47 @@ class MazeSolver(Node):
         # print('right dist: ' + str(self.distances[269])) # Right
         # print('rear dist: ' + str(self.distances[179])) # Rear
 
-        if self.distances[89] < self.sightdistance: # Checks for a wall to the left
+        if min(self.distances[74:105]) < self.sightdistance - 0.1: # Checks for a wall to the left
             self.leftWall = True
         else: 
             self.leftWall = False
 
-        if self.distances[0] < self.sightdistance: # Checks for a wall in front
+        if self.distances[0] < self.sightdistance - 0.2: # Checks for a wall in front
             self.frontWall = True
         else:
             self.frontWall = False
 
-        if self.distances[269] < self.sightdistance: # Checks for a wall to the right
+        if self.distances[269] < self.sightdistance - 0.1: # Checks for a wall to the right
             self.rightWall = True
         else:
             self.rightWall = False
 
 
     def solver(self): # Put Logic here
-        if self.frontWall == False:
-            self.moveForward()
+        if self.distances == []:
+            print('Array Empty')
+            pass
+        elif self.distances[0] == self.distances[89] and self.distances[0] == self.distances[269] or self.finished == True: # Checks if maze has been exited
+            self.stop()
         elif self.frontWall == True and self.leftWall == False:
             self.turnLeft()
             self.moveForward()
         elif self.frontWall == True and self.rightWall == False:
             self.turnRight()
             self.moveForward()
+        elif self.frontWall == False:
+            self.moveForward()
+        else:
+            print('Confused')
+            print(self.frontWall)
+            print(self.leftWall)
+            print(self.rightWall)
 
 
     def turnLeft(self): # Turns left very close to 90 degrees)
         print('Turning Left!')
         self.cmdvel.angular.z = math.pi/8
-        for i in range(23):
+        for i in range(5):
             self.pub.publish(self.cmdvel)
             time.sleep(0.2)
         self.cmdvel.angular.z = 0.0
@@ -73,11 +85,46 @@ class MazeSolver(Node):
     def turnRight(self): # Turns right very close to 90 degrees
         print('Turning Right!')
         self.cmdvel.angular.z = -math.pi/8
-        for i in range(23):
+        for i in range(5):
             self.pub.publish(self.cmdvel)
             time.sleep(0.2)
         self.cmdvel.angular.z = 0.0
         self.pub.publish(self.cmdvel)
+
+    def stop(self):
+        print("Stopping!")
+        self.finished = True
+        self.cmdvel.linear.x = 0.0
+        self.cmdvel.angular.z = 1.0
+        self.pub.publish(self.cmdvel)
+
+    def corrector(self):
+        linvel = 0.2
+        angvel = 0.2
+
+        if self.distances[0] < self.sightdistance:
+            pass
+        elif self.distances[89] < 0.4:
+            print('Correcting!')
+            self.cmdvel.angular.z = angvel
+            self.cmdvel.linear.x = linvel
+            self.pub.publish(self.cmdvel)
+            time.sleep(0.5)
+            self.cmdvel.angular.z = -angvel
+            self.cmdvel.linear.x = linvel
+            self.pub.publish(self.cmdvel)
+            time.sleep(0.3)
+        elif self.distances[269] < 0.4:
+            print('Correcting!')
+            self.cmdvel.angular.z = -angvel
+            self.cmdvel.linear.x = linvel
+            self.pub.publish(self.cmdvel)
+            time.sleep(0.5)
+            self.cmdvel.angular.z = angvel
+            self.cmdvel.linear.x = linvel
+            self.pub.publish(self.cmdvel)
+            time.sleep(0.3)    
+
 
 
 
