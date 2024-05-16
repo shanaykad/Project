@@ -1,6 +1,6 @@
 # Approach: Move forward until a wall is reached, check if robot can go left or right and proceed in that direction until maze has been exited
 
-import rclpy, time, math
+import rclpy, time, math, random
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
@@ -15,6 +15,9 @@ class MazeSolver(Node):
         self.distances = []
         self.sightdistance = 0.8 # maximum distance tb3 looks to see if wall exists
         self.stuckCounter = 0
+
+        self.turning = False
+        self.previousTurn = 'Right'
 
         self.leftWall = False
         self.frontWall = False
@@ -55,14 +58,24 @@ class MazeSolver(Node):
             print('Array Empty')
             pass
         elif self.distances[0] == self.distances[89] and self.distances[0] == self.distances[269] or self.finished == True: # Checks if maze has been exited
+            self.turning = False
             self.stop()
         elif self.frontWall == False or self.stuckCounter > 5:
+            self.turning = False
             self.moveForward()
             self.stuckCounter = 1
         elif self.frontWall == True and self.rightWall == True and self.shouldTurnRight == False:
+            self.turning = False
             self.turnLeft()
         elif self.frontWall == True and self.leftWall == True:
+            self.turning = False
             self.turnRight()
+        elif self.frontWall == True and self.leftWall == False and self.rightWall == False:
+            self.turning = True
+            if self.previousTurn == 'Right':
+                self.turnLeft()
+            elif self.previousTurn == 'Left':
+                self.turnRight()
         else:
             self.pause()
             print('Confused')
@@ -77,6 +90,8 @@ class MazeSolver(Node):
         self.pub.publish(self.cmdvel)
         if self.stuckCounter % 1 == 0: # Prevents tb3 getting stuck deciding which direction to turn
             self.stuckCounter += 1
+        if self.turning == False:
+            self.previousTurn = 'Left'
 
     def moveForward(self): # Moves forward a bit
         print('Moving forward!')
@@ -91,6 +106,8 @@ class MazeSolver(Node):
         self.pub.publish(self.cmdvel)
         if self.stuckCounter % 2 == 0: # Prevents tb3 getting stuck deciding which direction to turn
             self.stuckCounter += 1
+        if self.turning == False:
+            self.previousTurn = 'Right'
 
     def stop(self): # Turns around 180 degrees once maze has been exited
         if self.finished == True:
