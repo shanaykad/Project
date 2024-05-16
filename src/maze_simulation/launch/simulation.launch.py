@@ -37,8 +37,8 @@ def generate_launch_description():
     world = os.path.join(
         get_package_share_directory('maze_simulation'),
         'worlds',
-        # 'maze_0.world',
-        'maze_1.world',
+        'maze_0.world',
+        # 'maze_1.world',
         # 'maze_2.world',
     )
 
