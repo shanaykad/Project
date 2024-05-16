@@ -13,13 +13,12 @@ class MazeSolver(Node):
         self.scan_sub = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)
         self.cmdvel = Twist()
         self.distances = []
-        self.sightdistance = 0.8 # maximum distance tb3 looks to see if wall exists
-        self.stuckCounter = 0
+        self.sightdistance = 0.7 # maximum distance tb3 looks to see if wall exists
         self.leftWall = False
         self.frontWall = False
         self.rightWall = False
         self.finished = False # True when maze has been exited
-        self.create_timer(0.1, self.solver) # Maze logic called every tenth of a second
+        self.create_timer(1.0, self.solver) # Maze logic called every second
         
 
     def scan_callback(self, msg):
@@ -35,12 +34,12 @@ class MazeSolver(Node):
         else: 
             self.leftWall = False
 
-        if min(min(self.distances[0:25]), min(self.distances[335:360])) < self.sightdistance - 0.2: # Checks for a wall in front
+        if self.distances[0] < self.sightdistance - 0.2: # Checks for a wall in front
             self.frontWall = True
         else:
             self.frontWall = False
 
-        if min(self.distances[254:284]) < self.sightdistance - 0.1: # Checks for a wall to the right
+        if self.distances[269] < self.sightdistance - 0.1: # Checks for a wall to the right
             self.rightWall = True
         else:
             self.rightWall = False
@@ -52,15 +51,15 @@ class MazeSolver(Node):
             pass
         elif self.distances[0] == self.distances[89] and self.distances[0] == self.distances[269] or self.finished == True: # Checks if maze has been exited
             self.stop()
-        elif self.frontWall == False or self.stuckCounter > 5:
-            self.moveForward()
-            self.stuckCounter = 1
-        elif self.frontWall == True and self.rightWall == True:
+        elif self.frontWall == True and self.leftWall == False:
             self.turnLeft()
-        elif self.frontWall == True and self.leftWall == True:
+            self.moveForward()
+        elif self.frontWall == True and self.rightWall == False:
             self.turnRight()
+            self.moveForward()
+        elif self.frontWall == False:
+            self.moveForward()
         else:
-            self.pause()
             print('Confused')
             print(self.frontWall)
             print(self.leftWall)
@@ -69,44 +68,36 @@ class MazeSolver(Node):
 
     def turnLeft(self): # Turns left very close to 90 degrees)
         print('Turning Left!')
-        self.cmdvel.linear.x = 0.0
-        self.cmdvel.angular.z = 0.2
+        self.cmdvel.angular.z = math.pi/8
+        for i in range(5):
+            self.pub.publish(self.cmdvel)
+            time.sleep(0.2)
+        self.cmdvel.angular.z = 0.0
         self.pub.publish(self.cmdvel)
-        if self.stuckCounter % 1 == 0:
-            self.stuckCounter += 1
 
     def moveForward(self): # Moves forward a bit
         print('Moving forward!')
         self.cmdvel.linear.x = 0.3
-        self.cmdvel.angular.z = 0.0
+        for i in range(5):
+            self.pub.publish(self.cmdvel)
+            time.sleep(0.1)
+        self.cmdvel.linear.x = 0.0
         self.pub.publish(self.cmdvel)
 
     def turnRight(self): # Turns right very close to 90 degrees
         print('Turning Right!')
-        self.cmdvel.linear.x = 0.0
-        self.cmdvel.angular.z = -0.2
-        self.pub.publish(self.cmdvel)
-        if self.stuckCounter % 2 == 0:
-            self.stuckCounter += 1
-
-    def stop(self): # Turns around 180 degrees once maze has been exited
-        if self.finished == True:
-            pass
-        else:
-            print("Stopping!")
-            self.finished = True
-            self.cmdvel.linear.x = 0.0
-            self.cmdvel.angular.z = 3.5
+        self.cmdvel.angular.z = -math.pi/8
+        for i in range(5):
             self.pub.publish(self.cmdvel)
-            time.sleep(1.0)
-            self.cmdvel.linear.x = 0.0
-            self.cmdvel.angular.z = 0.0
-            self.pub.publish(self.cmdvel)
-
-    def pause(self):
-        print("Pausing!")
-        self.cmdvel.linear.x = 0.0
+            time.sleep(0.2)
         self.cmdvel.angular.z = 0.0
+        self.pub.publish(self.cmdvel)
+
+    def stop(self):
+        print("Stopping!")
+        self.finished = True
+        self.cmdvel.linear.x = 0.0
+        self.cmdvel.angular.z = 1.0
         self.pub.publish(self.cmdvel)
 
     def corrector(self):

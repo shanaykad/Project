@@ -28,6 +28,7 @@ setup(
     entry_points={
         'console_scripts': [
             "mazesolver = maze_simulation.mazesolver:main",
+            "2mazesolver = maze_simulation.mazesolver2:main",
         ],
     },
 )
