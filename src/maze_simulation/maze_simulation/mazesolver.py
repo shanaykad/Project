@@ -13,13 +13,14 @@ class MazeSolver(Node):
         self.scan_sub = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)
         self.cmdvel = Twist()
         self.distances = []
+
         self.sightdistance = 0.8 # maximum distance tb3 looks to see if wall exists
-        self.stuckCounter = 0
+        self.stuckCounter = 0 # Keeps track of repetitive movements
 
-        self.turning = False
-        self.previousTurn = 'Right'
+        self.turning = False # Variable to prevent overwriting "where should I turn" logic from self.previousTurn
+        self.previousTurn = 'Right' # Keeps track of previous turn to use that information and turn the opposite direction if normal to the maze with nothing on the sides
 
-        self.leftWall = False
+        self.leftWall = False # Variables for when a wall is present within self.sightdistance (or closer) of the robot
         self.frontWall = False
         self.rightWall = False
 
@@ -48,7 +49,7 @@ class MazeSolver(Node):
         else:
             self.rightWall = False
 
-        if sum(self.distances[290:330]) > sum(self.distances[20:60]): # Checks to see if robot should turn left or right next
+        if sum(self.distances[290:330]) > sum(self.distances[20:60]): # Checks to see if robot should turn left or right next by checking which direction has a larger opening
             self.shouldTurnRight = True
         else:
             self.shouldTurnRight = False
@@ -60,23 +61,23 @@ class MazeSolver(Node):
         elif self.distances[0] == self.distances[89] and self.distances[0] == self.distances[269] or self.finished == True: # Checks if maze has been exited
             self.turning = False
             self.stop()
-        elif self.frontWall == False or self.stuckCounter > 5:
+        elif self.frontWall == False or self.stuckCounter > 5: # If there is no wall in front, move forward
             self.turning = False
             self.moveForward()
             self.stuckCounter = 1
-        elif self.frontWall == True and self.rightWall == True and self.shouldTurnRight == False:
+        elif self.frontWall == True and self.rightWall == True and self.shouldTurnRight == False: # If there is a wall in front and to the right, turn left
             self.turning = False
             self.turnLeft()
-        elif self.frontWall == True and self.leftWall == True:
+        elif self.frontWall == True and self.leftWall == True: # If there is a wall in front and to the left, turn right
             self.turning = False
             self.turnRight()
-        elif self.frontWall == True and self.leftWall == False and self.rightWall == False:
+        elif self.frontWall == True and self.leftWall == False and self.rightWall == False: # If there is a wall in front but none to the sides, turn the opposite direction of the last turn
             self.turning = True
             if self.previousTurn == 'Right':
                 self.turnLeft()
             elif self.previousTurn == 'Left':
                 self.turnRight()
-        else:
+        else: # Debugging case
             self.pause()
             print('Confused')
             print(self.frontWall)
