@@ -88,7 +88,7 @@ class MazeSolver(Node):
     def turnLeft(self): # Turns left a bit
         print('Turning Left!')
         self.cmdvel.linear.x = 0.0
-        self.cmdvel.angular.z = 0.5
+        self.cmdvel.angular.z = 0.70
         self.pub.publish(self.cmdvel)
         if self.stuckCounter % 1 == 0: # Prevents tb3 getting stuck deciding which direction to turn
             self.stuckCounter += 1
@@ -97,14 +97,14 @@ class MazeSolver(Node):
 
     def moveForward(self): # Moves forward a bit
         print('Moving forward!')
-        self.cmdvel.linear.x = 0.3
+        self.cmdvel.linear.x = 0.38
         self.cmdvel.angular.z = 0.0
         self.pub.publish(self.cmdvel)
 
     def turnRight(self): # Turns right a bit
         print('Turning Right!')
         self.cmdvel.linear.x = 0.0
-        self.cmdvel.angular.z = -0.5
+        self.cmdvel.angular.z = -0.70
         self.pub.publish(self.cmdvel)
         if self.stuckCounter % 2 == 0: # Prevents tb3 getting stuck deciding which direction to turn
             self.stuckCounter += 1
